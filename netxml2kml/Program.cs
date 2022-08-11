@@ -80,8 +80,14 @@ class Program
                         if (String.IsNullOrEmpty(opt) || opt.ToLower() == "no" ||
                             opt.ToLower() == "n")
                         {
-                            Console.Write("Enter a new name: ");
+                            Console.Write("Enter a <new_name>[.kml]: ");
                             var name = Console.ReadLine();
+
+                            if (String.IsNullOrEmpty(name))
+                            {
+                                continue;
+                            }
+                            
                             outFile = new FileInfo(
                                 Path.Join(outFile.DirectoryName, name));
                             continue;
