@@ -7,6 +7,7 @@ public sealed class DatabaseContext : DbContext
 {
     public DbSet<WirelessNetwork> WirelessNetworks { get; set; } = null!;
     public DbSet<WirelessClient> WirelessClients { get; set; } = null!;
+    public DbSet<WirelessConnection> WirelessConnections { get; set; } = null!;
 
     private string DbPath { get; }
 
@@ -21,6 +22,12 @@ public sealed class DatabaseContext : DbContext
         }
         
         DbPath = Path.Join(path, "netxml2kml.sqlite3.db");
+    }
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<WirelessConnection>().HasKey(wc =>
+            new {wc.WirelessNetworkBssid, wc.WirelessClientMac});
     }
     
     protected override void OnConfiguring(DbContextOptionsBuilder options) 
