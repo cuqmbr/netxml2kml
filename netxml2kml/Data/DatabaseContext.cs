@@ -11,7 +11,7 @@ public sealed class DatabaseContext : DbContext
 
     private string DbPath { get; }
 
-    public DatabaseContext()
+    public DatabaseContext(string dbName = "netxml2kml.sqlite3.db")
     {
         var folder = Environment.SpecialFolder.LocalApplicationData;
         var path = Path.Join(Environment.GetFolderPath(folder), "netxml2kml");
@@ -21,7 +21,8 @@ public sealed class DatabaseContext : DbContext
             Directory.CreateDirectory(path);
         }
         
-        DbPath = Path.Join(path, "netxml2kml.sqlite3.db");
+        DbPath = Path.Join(path, dbName);
+        Database.EnsureCreated();
     }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)

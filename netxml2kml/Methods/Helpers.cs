@@ -102,4 +102,11 @@ public static class Helpers
 
         return new DateTime(year, month, day, hour, minute, second);
     }
+
+    public static void WriteStringToFile(string str, FileInfo file)
+    {
+        var writer = new StreamWriter(file.OpenWrite());
+        writer.Write(str);
+        writer.Close();
+    }
 }

@@ -17,12 +17,22 @@ class Program
             aliases: new[] {"-o", "--output"},
             description: "The name of the file to be created.");
 
+        var databaseOption = new Option<bool>(
+            aliases: new[] {"-d", "--use-database"},
+            description: "Use database. Save/retrieve wireless networks and clients to/from sqlite database.");
+
+        var queryOption = new Option<string?>(
+            aliases: new[] {"-q", "--query"},
+            description: "Filter input using sql query.");
+
         var rootCommand = new RootCommand("netxml2kml – .netxml to .kml converter.");
         rootCommand.AddOption(inputOption);
         rootCommand.AddOption(outputOption);
+        rootCommand.AddOption(databaseOption);
+        rootCommand.AddOption(queryOption);
 
         rootCommand.SetHandler(CliOptionsHandlers.UniversalHandler,
-            inputOption, outputOption);
+            inputOption, outputOption, databaseOption, queryOption);
 
         return await rootCommand.InvokeAsync(args);
     }
