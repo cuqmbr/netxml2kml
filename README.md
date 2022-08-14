@@ -1,4 +1,4 @@
-# netxml2kml – .netxml to .kml airodump output converter
+# netxml2kml – .netxml to .kml converter
 
 <!--## Features
 
