@@ -9,6 +9,57 @@ public static class CliOptionsHandlers
     public static void UniversalHandler(FileInfo? inputFile,
         FileInfo? outputFile, bool useDatabase, string? sqlQuery)
     {
+        // Validate input file
+        if (inputFile != null)
+        {
+            if (!inputFile.Exists)
+            {
+                Console.WriteLine("Input file doesn't exist.");
+                return;
+            }
+        }
+
+        // Validate output file
+        if (outputFile != null)
+        {
+            if (!Directory.Exists(outputFile.DirectoryName))
+            {
+                Console.WriteLine("Output directory doesn't exist.");
+                return;
+            }
+
+            // If output file with the same name already exists –
+            // prompt user to change a name of the file
+            while (outputFile.Exists)
+            {
+                Console.Write("Output file already exists. Do you want to overwrite it? [y/N] ");
+                var opt = Console.ReadLine();
+
+                if (String.IsNullOrEmpty(opt) || opt.ToLower() == "no" ||
+                    opt.ToLower() == "n")
+                {
+                    Console.Write("Enter a <new_name>[.kml]: ");
+                    var name = Console.ReadLine();
+
+                    if (String.IsNullOrEmpty(name))
+                    {
+                        continue;
+                    }
+                            
+                    outputFile = new FileInfo(
+                        Path.Join(outputFile.DirectoryName, name));
+                    continue;
+                }
+                        
+                if (opt.ToLower() == "yes" ||
+                    opt.ToLower() == "y")
+                {
+                    break;
+                }
+            }
+        }
+
+        // Run some logic based on options combination
         if (inputFile != null && outputFile != null)
         {
             var wirelessNetworks = Helpers.DeserializeXml(inputFile);
@@ -57,6 +108,11 @@ public static class CliOptionsHandlers
         {
             using var dbContext = new DatabaseContext();
             Console.WriteLine(dbContext.Database.ExecuteSqlRaw(sqlQuery));
+        }
+        else
+        {
+            Console.WriteLine("Options combination is unsupported or some option lacks an argument." +
+                              "\nUse --help to see use case examples.");
         }
     }
     
