@@ -5,7 +5,7 @@ namespace netxml2kml;
 
 class Program
 {
-    static async Task<int> Main(string[] args)
+    static int Main(string[] args)
     {
         // Define CLI parser options, commands & handlers
 
@@ -16,16 +16,91 @@ class Program
             Arity = ArgumentArity.ZeroOrOne
         };
 
+        inputOption.AddValidator(result =>
+        {
+            var inputFile = result.GetValueForOption(inputOption);
+
+            if (inputFile == null)
+            {
+                result.ErrorMessage =
+                    "Argument for input option is not specified.";
+                return;
+            }
+
+            if (!inputFile.Exists)
+            {
+                result.ErrorMessage = "Input file doesn't exist.";
+                return;
+            }
+        });
+
         var outputOption = new Option<FileInfo?>(
             aliases: new[] {"-o", "--output"},
-            description: "The name of the file to be created.")
+            description: "The name of the file to be created.",
+            parseArgument: result =>
+            {
+                // If output file with the same name already exists –
+                // prompt user to change a name of the file
+                var outputFile = new FileInfo(result.Tokens.Single().Value);
+
+                while (outputFile.Exists)
+                {
+                    Console.Write(
+                        "Output file already exists. Do you want to overwrite it? [y/N] ");
+                    var opt = Console.ReadLine();
+
+                    if (String.IsNullOrEmpty(opt) || opt.ToLower() == "no" ||
+                        opt.ToLower() == "n")
+                    {
+                        Console.Write("Enter a <new_name>[.kml]: ");
+                        var name = Console.ReadLine();
+
+                        if (String.IsNullOrEmpty(name))
+                        {
+                            continue;
+                        }
+
+                        outputFile =
+                            new FileInfo(Path.Join(outputFile.DirectoryName,
+                                name));
+                        continue;
+                    }
+
+                    if (opt.ToLower() == "yes" ||
+                        opt.ToLower() == "y")
+                    {
+                        break;
+                    }
+                }
+
+                return outputFile;
+            })
         {
             Arity = ArgumentArity.ZeroOrOne
         };
 
+        outputOption.AddValidator(result =>
+        {
+            var outputFile = result.GetValueForOption(outputOption);
+
+            if (outputFile == null)
+            {
+                result.ErrorMessage =
+                    "Argument for output option is not specified.";
+                return;
+            }
+
+            if (!Directory.Exists(outputFile.DirectoryName))
+            {
+                result.ErrorMessage = "Output directory doesn't exist.";
+                return;
+            }
+        });
+
         var databaseOption = new Option<bool>(
             aliases: new[] {"-d", "--use-database"},
-            description: "Use database. Save/retrieve wireless networks and clients to/from sqlite database.")
+            description:
+            "Use database. Save/retrieve wireless networks and clients to/from sqlite database.")
         {
             Arity = ArgumentArity.ZeroOrOne
         };
@@ -37,7 +112,8 @@ class Program
             Arity = ArgumentArity.ZeroOrOne
         };
 
-        var rootCommand = new RootCommand("netxml2kml – .netxml to .kml converter.");
+        var rootCommand =
+            new RootCommand("netxml2kml – .netxml to .kml converter.");
         rootCommand.AddOption(inputOption);
         rootCommand.AddOption(outputOption);
         rootCommand.AddOption(databaseOption);
@@ -46,6 +122,6 @@ class Program
         rootCommand.SetHandler(CliOptionsHandlers.UniversalHandler,
             inputOption, outputOption, databaseOption, queryOption);
 
-        return await rootCommand.InvokeAsync(args);
+        return rootCommand.Invoke(args);
     }
 }
