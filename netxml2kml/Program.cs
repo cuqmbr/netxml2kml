@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Xml.Linq;
 using netxml2kml.Methods;
 
 namespace netxml2kml;
@@ -7,8 +8,8 @@ class Program
 {
     static int Main(string[] args)
     {
-        // Define CLI parser options, commands & handlers
-
+        /*-------------------------Input Option----------------------------*/
+        
         var inputOption = new Option<FileInfo?>(
             aliases: new[] {"-i", "--input"},
             description: "Path to the file to be converted.")
@@ -22,8 +23,7 @@ class Program
 
             if (inputFile == null)
             {
-                result.ErrorMessage =
-                    "Argument for input option is not specified.";
+                result.ErrorMessage = "Argument for input option is not specified.";
                 return;
             }
 
@@ -34,6 +34,8 @@ class Program
             }
         });
 
+        /*-------------------------Output Option---------------------------*/
+        
         var outputOption = new Option<FileInfo?>(
             aliases: new[] {"-o", "--output"},
             description: "The name of the file to be created.",
@@ -85,8 +87,7 @@ class Program
 
             if (outputFile == null)
             {
-                result.ErrorMessage =
-                    "Argument for output option is not specified.";
+                result.ErrorMessage = "Argument for output option is not specified.";
                 return;
             }
 
@@ -97,20 +98,65 @@ class Program
             }
         });
 
+        /*-------------------------Concat Option---------------------------*/
+        
+        var concatOption = new Option<IEnumerable<FileInfo>?>(
+            aliases: new[] {"-c", "--concat"},
+            description: "Concatenate multiple kml files. ")
+        {
+            Arity = ArgumentArity.OneOrMore,
+            AllowMultipleArgumentsPerToken = true
+        };
+        
+        concatOption.AddValidator(result =>
+        {
+            var inputFiles = result.GetValueForOption(concatOption);
+
+            if (inputFiles == null)
+            {
+                result.ErrorMessage = "Argument for concat option is not specified.";
+                return;
+            }
+
+            var fileInfos = inputFiles as FileInfo[] ?? inputFiles.ToArray();
+
+            foreach (var inputFile in fileInfos)
+            {
+                if (!inputFile.Exists)
+                {
+                    result.ErrorMessage = $"File {inputFile.FullName} doesen't exist.";
+                    return;
+                }
+            }
+
+            // Validate that inputted files have the same format
+            if (fileInfos.Any(fi => XDocument.Load(fi.FullName).Root?.Name != "kml"))
+            {
+                result.ErrorMessage = "Some files passed to concat option have invalid content.";
+                return;
+            }
+        });
+
+        /*------------------------Database Option--------------------------*/
+        
         var databaseOption = new Option<bool>(
             aliases: new[] {"-d", "--use-database"},
             description:
-            "Use database. Save/retrieve wireless networks and clients to/from sqlite database.")
+            "Use database (save/retrieve data from database).")
         {
             Arity = ArgumentArity.ZeroOrOne
         };
 
+        /*------------------------Query Option-----------------------------*/
+        
         var queryOption = new Option<string?>(
             aliases: new[] {"-q", "--query"},
-            description: "Filter input using sql query.")
+            description: "Filter input/output using sql query.")
         {
             Arity = ArgumentArity.ZeroOrOne
         };
+
+        /*----------------------Root Command Setup-------------------------*/
 
         var rootCommand =
             new RootCommand("netxml2kml – .netxml to .kml converter.");
@@ -118,9 +164,15 @@ class Program
         rootCommand.AddOption(outputOption);
         rootCommand.AddOption(databaseOption);
         rootCommand.AddOption(queryOption);
+        rootCommand.AddOption(concatOption);
 
+        /*----------------------Handlers Setup-----------------------------*/
+        
         rootCommand.SetHandler(CliOptionsHandlers.UniversalHandler,
-            inputOption, outputOption, databaseOption, queryOption);
+            inputOption, outputOption, databaseOption, queryOption,
+            concatOption);
+        
+        /*----------------------------------------------------------------*/
 
         return rootCommand.Invoke(args);
     }

@@ -8,7 +8,8 @@ namespace netxml2kml.Methods;
 public static class CliOptionsHandlers
 {
     public static void UniversalHandler(FileInfo? inputFile,
-        FileInfo? outputFile, bool useDatabase, string? sqlQuery)
+        FileInfo? outputFile, bool useDatabase, string? sqlQuery,
+        IEnumerable<FileInfo>? concatFiles)
     {
         // Run some logic based on options combination
         if (inputFile != null && outputFile != null)
@@ -25,7 +26,8 @@ public static class CliOptionsHandlers
                 FilterWirelessNetworksInMemory(ref wirelessNetworks, sqlQuery);
             }
 
-            var kmlString = GetKmlString(wirelessNetworks);
+            var kmlString = GetKmlString(wirelessNetworks,
+                $"WiFi Map - {outputFile.Name}");
             Helpers.WriteStringToFile(kmlString, outputFile);
         }
         else if (inputFile != null && outputFile == null && useDatabase)
@@ -45,11 +47,15 @@ public static class CliOptionsHandlers
             
             if (sqlQuery != null)
             {
-                kmlString = GetKmlString(FilterWirelessNetworksFromDatabase(sqlQuery));
+                kmlString = GetKmlString(
+                    FilterWirelessNetworksFromDatabase(sqlQuery),
+                    $"WiFi Map - {outputFile.Name}");
             }
             else
             {
-                kmlString = GetKmlString(FilterWirelessNetworksFromDatabase("SELECT * FROM WirelessNetworks"));
+                kmlString = GetKmlString(
+                    FilterWirelessNetworksFromDatabase("SELECT * FROM WirelessNetworks"),
+                    $"WiFi Map - {outputFile.Name}");
             }
             
             Helpers.WriteStringToFile(kmlString, outputFile);
@@ -59,6 +65,12 @@ public static class CliOptionsHandlers
         {
             using var dbContext = new DatabaseContext();
             Console.WriteLine(dbContext.Database.ExecuteSqlRaw(sqlQuery));
+        }
+        else if (concatFiles != null && outputFile != null)
+        {
+            var inputFiles = concatFiles as FileInfo[] ?? concatFiles.ToArray();
+            var kmlString = ConcatKml(inputFiles);
+            Helpers.WriteStringToFile(kmlString, outputFile);
         }
         else
         {
@@ -129,6 +141,7 @@ public static class CliOptionsHandlers
         document.Add(wpaFolder);
         document.Add(wepFolder);
         document.Add(opnFolder);
+        document.Add(unknownFolder);
         kml.Add(document);
         kmlTree.Add(kml);
         
@@ -281,5 +294,45 @@ public static class CliOptionsHandlers
     {
         using var dbContext = new DatabaseContext();
         return dbContext.WirelessNetworks.FromSqlRaw(sqlQuery).ToArray();
+    }
+
+    private static string ConcatKml(IEnumerable<FileInfo> inputFiles)
+    {
+        var inFs = inputFiles.ToArray();
+        var result = XDocument.Load(inFs[0].FullName);
+
+        result.Root!.Element("Document")!.Element("name")!.Value =
+            "WiFi Map - Concatenated";
+
+        var folders = result.Root?.Element("Document")?.Elements("Folder")
+            .ToArray();
+        var wpa3Folder = folders?[0];
+        var wpa2Folder = folders?[1];
+        var wpaFolder = folders?[2];
+        var wepFolder = folders?[3];
+        var opnFolder = folders?[4];
+        var unknownFolder = folders?[5];
+        
+        foreach (var inF in inFs[1..])
+        {
+            var inFDoc = XDocument.Load(inF.FullName);
+            var inFolders = inFDoc.Root?.Element("Document")?.Elements("Folder")
+                .ToArray();
+
+            inFolders?[0].Elements("Placemark").ToList()
+                .ForEach(p => wpa3Folder?.Add(p));
+            inFolders?[1].Elements("Placemark").ToList()
+                .ForEach(p => wpa2Folder?.Add(p));
+            inFolders?[2].Elements("Placemark").ToList()
+                .ForEach(p => wpaFolder?.Add(p));
+            inFolders?[3].Elements("Placemark").ToList()
+                .ForEach(p => wepFolder?.Add(p));
+            inFolders?[4].Elements("Placemark").ToList()
+                .ForEach(p => opnFolder?.Add(p));
+            inFolders?[5].Elements("Placemark").ToList()
+                .ForEach(p => unknownFolder?.Add(p));
+        }
+
+        return result.ToString();
     }
 }

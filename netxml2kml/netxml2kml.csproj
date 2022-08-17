@@ -5,6 +5,13 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <Title>netxml2kml</Title>
+        <Authors>cuqmbr</Authors>
+        <Description>netxml to kml CLI converter &amp; tools</Description>
+        <Company>cuqmbr</Company>
+        <NeutralLanguage>en-US</NeutralLanguage>
+        <AssemblyVersion>1.0.0</AssemblyVersion>
+        <FileVersion>1.0.0</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>
