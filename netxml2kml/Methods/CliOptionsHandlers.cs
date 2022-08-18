@@ -2,81 +2,109 @@ using System.Xml.Linq;
 using Microsoft.EntityFrameworkCore;
 using netxml2kml.Data;
 using netxml2kml.Models;
+using Serilog;
 
 namespace netxml2kml.Methods;
 
 public static class CliOptionsHandlers
 {
-    public static void UniversalHandler(FileInfo? inputFile,
+    public static Task<int> UniversalHandler(FileInfo? inputFile,
         FileInfo? outputFile, bool useDatabase, string? sqlQuery,
-        IEnumerable<FileInfo>? concatFiles)
+        IEnumerable<FileInfo>? concatFiles, bool isVerbose)
     {
-        // Run some logic based on options combination
-        if (inputFile != null && outputFile != null)
+        Log.Information("Handler started with options: " +
+                        "-i: {input}; -o {output}; -d {useDatabase}; " +
+                        "-q: {sqlQuery}; -c: {concatFiles}; -v: {verbosityLevel}.",
+                        inputFile!, outputFile!, useDatabase, 
+            sqlQuery!, concatFiles!, isVerbose);
+
+        try
         {
-            var wirelessNetworks = Helpers.DeserializeXml(inputFile);
-            
-            if (useDatabase)
+            // Run some logic based on options combination
+            if (inputFile != null && outputFile != null)
             {
+                var wirelessNetworks = Helpers.DeserializeXml(inputFile);
+
+                if (useDatabase)
+                {
+                    AddWirelessNetworksToDatabase(wirelessNetworks);
+                }
+
+                if (sqlQuery != null)
+                {
+                    FilterWirelessNetworksInMemory(ref wirelessNetworks,
+                        sqlQuery);
+                }
+
+                var kmlString = GetKmlString(wirelessNetworks,
+                    $"WiFi Map - {outputFile.Name}");
+                Helpers.WriteStringToFile(kmlString, outputFile);
+            }
+            else if (inputFile != null && outputFile == null && useDatabase)
+            {
+                var wirelessNetworks = Helpers.DeserializeXml(inputFile);
+
+                if (sqlQuery != null)
+                {
+                    FilterWirelessNetworksInMemory(ref wirelessNetworks,
+                        sqlQuery);
+                }
+
                 AddWirelessNetworksToDatabase(wirelessNetworks);
             }
-            
-            if (sqlQuery != null)
+            else if (inputFile == null && outputFile != null && useDatabase)
             {
-                FilterWirelessNetworksInMemory(ref wirelessNetworks, sqlQuery);
-            }
+                string kmlString;
 
-            var kmlString = GetKmlString(wirelessNetworks,
-                $"WiFi Map - {outputFile.Name}");
-            Helpers.WriteStringToFile(kmlString, outputFile);
-        }
-        else if (inputFile != null && outputFile == null && useDatabase)
-        {
-            var wirelessNetworks = Helpers.DeserializeXml(inputFile);
+                if (sqlQuery != null)
+                {
+                    kmlString = GetKmlString(
+                        FilterWirelessNetworksFromDatabase(sqlQuery),
+                        $"WiFi Map - {outputFile.Name}");
+                }
+                else
+                {
+                    kmlString = GetKmlString(
+                        FilterWirelessNetworksFromDatabase(
+                            "SELECT * FROM WirelessNetworks"),
+                        $"WiFi Map - {outputFile.Name}");
+                }
 
-            if (sqlQuery != null)
-            {
-                FilterWirelessNetworksInMemory(ref wirelessNetworks, sqlQuery);
+                Helpers.WriteStringToFile(kmlString, outputFile);
             }
-            
-            AddWirelessNetworksToDatabase(wirelessNetworks);
-        }
-        else if (inputFile == null && outputFile != null && useDatabase)
-        {
-            string kmlString;
-            
-            if (sqlQuery != null)
+            else if (inputFile == null && outputFile == null && useDatabase &&
+                     sqlQuery != null)
             {
-                kmlString = GetKmlString(
-                    FilterWirelessNetworksFromDatabase(sqlQuery),
-                    $"WiFi Map - {outputFile.Name}");
+                using var dbContext = new DatabaseContext();
+                Console.WriteLine(dbContext.Database.ExecuteSqlRaw(sqlQuery));
+            }
+            else if (concatFiles != null && outputFile != null)
+            {
+                var inputFiles =
+                    concatFiles as FileInfo[] ?? concatFiles.ToArray();
+                var kmlString = ConcatKml(inputFiles);
+                Helpers.WriteStringToFile(kmlString, outputFile);
             }
             else
             {
-                kmlString = GetKmlString(
-                    FilterWirelessNetworksFromDatabase("SELECT * FROM WirelessNetworks"),
-                    $"WiFi Map - {outputFile.Name}");
+                Log.Warning("Options combination is unsupported.");
             }
-            
-            Helpers.WriteStringToFile(kmlString, outputFile);
         }
-        else if (inputFile == null && outputFile == null && useDatabase &&
-                 sqlQuery != null)
+        catch (Exception e)
         {
-            using var dbContext = new DatabaseContext();
-            Console.WriteLine(dbContext.Database.ExecuteSqlRaw(sqlQuery));
+            Log.Fatal(e, "Program ended unexpectedly. " +
+                         "Run command with -v option and see logs in {logsFold}" +
+                         "to troubleshoot the error.",
+                RuntimeStorage.LogsFolder);
+            return Task.FromResult(1);
         }
-        else if (concatFiles != null && outputFile != null)
+        finally
         {
-            var inputFiles = concatFiles as FileInfo[] ?? concatFiles.ToArray();
-            var kmlString = ConcatKml(inputFiles);
-            Helpers.WriteStringToFile(kmlString, outputFile);
+            Log.CloseAndFlush();
         }
-        else
-        {
-            Console.WriteLine("Options combination is unsupported or some option lacks an argument." +
-                              "\nUse --help to see use case examples.");
-        }
+        
+        Log.Information("Options handling completed successfully.");
+        return Task.FromResult(0);
     }
     
     private static string GetKmlString(IEnumerable<WirelessNetwork> wirelessNetworks,
@@ -84,6 +112,8 @@ public static class CliOptionsHandlers
         string description = $"Autogenerated by a tool." +
                            $"\nhttps://github.com/cuqmbr/netxml2kml")
     {
+        Log.Information("Generating kml...");
+        
         var kmlTree = new XDocument();
 
         var kml = new XElement("kml");
@@ -145,6 +175,8 @@ public static class CliOptionsHandlers
         kml.Add(document);
         kmlTree.Add(kml);
         
+        Log.Information("Kml generated.");
+        
         return kmlTree.ToString();
 
         void AddWirelessNetworkPlacemark(XElement parent, WirelessNetwork wn)
@@ -165,6 +197,8 @@ public static class CliOptionsHandlers
     
     private static void AddWirelessNetworksToDatabase(IEnumerable<WirelessNetwork> wirelessNetworks)
     {
+        Log.Information("Adding wireless networks to the database...");
+        
         using var dbContext = new DatabaseContext();
 
         foreach (var wirelessNetwork in wirelessNetworks)
@@ -276,11 +310,16 @@ public static class CliOptionsHandlers
         }
         
         dbContext.SaveChanges();
+        
+        Log.Information("Wireless networks added successfully.");
     }
     
     private static void FilterWirelessNetworksInMemory(
         ref WirelessNetwork[] wirelessNetworks, string sqlQuery)
     {
+        Log.Information("Filtering wireless network using {query}...",
+            sqlQuery);
+        
         using var dbContext = new DatabaseContext("InMemoryFiltering.sqlite3.db");
         
         dbContext.WirelessNetworks.AddRange(wirelessNetworks);
@@ -288,16 +327,27 @@ public static class CliOptionsHandlers
         wirelessNetworks = dbContext.WirelessNetworks.FromSqlRaw(sqlQuery).ToArray();
         
         dbContext.Database.EnsureDeleted();
+        
+        Log.Information("Networks are filtered.");
     }
     
     private static WirelessNetwork[] FilterWirelessNetworksFromDatabase(string sqlQuery)
     {
+        Log.Information("Filtering wireless network using {query}...",
+            sqlQuery);
+        
         using var dbContext = new DatabaseContext();
-        return dbContext.WirelessNetworks.FromSqlRaw(sqlQuery).ToArray();
+        var wirelessNetworks = dbContext.WirelessNetworks.FromSqlRaw(sqlQuery);
+        
+        Log.Information("Networks are filtered.");
+            
+        return wirelessNetworks.ToArray();
     }
 
     private static string ConcatKml(IEnumerable<FileInfo> inputFiles)
     {
+        Log.Information("Concatenating kml...");
+        
         var inFs = inputFiles.ToArray();
         var result = XDocument.Load(inFs[0].FullName);
 
@@ -332,6 +382,8 @@ public static class CliOptionsHandlers
             inFolders?[5].Elements("Placemark").ToList()
                 .ForEach(p => unknownFolder?.Add(p));
         }
+
+        Log.Information("Concatenating successfully.");
 
         return result.ToString();
     }

@@ -6,7 +6,7 @@ namespace netxml2kml;
 
 class Program
 {
-    static int Main(string[] args)
+    static async Task<int> Main(string[] args)
     {
         /*-------------------------Input Option----------------------------*/
         
@@ -23,7 +23,8 @@ class Program
 
             if (inputFile == null)
             {
-                result.ErrorMessage = "Argument for input option is not specified.";
+                result.ErrorMessage =
+                    "Argument for input option is not specified.";
                 return;
             }
 
@@ -87,7 +88,8 @@ class Program
 
             if (outputFile == null)
             {
-                result.ErrorMessage = "Argument for output option is not specified.";
+                result.ErrorMessage =
+                    "Argument for output option is not specified.";
                 return;
             }
 
@@ -114,7 +116,8 @@ class Program
 
             if (inputFiles == null)
             {
-                result.ErrorMessage = "Argument for concat option is not specified.";
+                result.ErrorMessage =
+                    "Argument for concat option is not specified.";
                 return;
             }
 
@@ -124,15 +127,18 @@ class Program
             {
                 if (!inputFile.Exists)
                 {
-                    result.ErrorMessage = $"File {inputFile.FullName} doesen't exist.";
+                    result.ErrorMessage =
+                        $"File {inputFile.FullName} doesen't exist.";
                     return;
                 }
             }
 
             // Validate that inputted files have the same format
-            if (fileInfos.Any(fi => XDocument.Load(fi.FullName).Root?.Name != "kml"))
+            if (fileInfos.Any(fi =>
+                    XDocument.Load(fi.FullName).Root?.Name != "kml"))
             {
-                result.ErrorMessage = "Some files passed to concat option have invalid content.";
+                result.ErrorMessage =
+                    "Some files passed to concat option have invalid content.";
                 return;
             }
         });
@@ -155,7 +161,23 @@ class Program
         {
             Arity = ArgumentArity.ZeroOrOne
         };
+        
+        /*----------------------Verbosity Option---------------------------*/
+        
+        var verbosityOption = new Option<bool>(
+            aliases: new[] {"-v", "--verbosity"},
+            description: "Set console output verbosity level.")
+        {
+            Arity = ArgumentArity.ZeroOrOne
+        };
+        
+        verbosityOption.AddValidator(result =>
+        {
+            RuntimeStorage.IsVerbose = result.GetValueForOption(verbosityOption);
+        });
 
+        RuntimeStorage.ConfigureLogger();
+        
         /*----------------------Root Command Setup-------------------------*/
 
         var rootCommand =
@@ -165,15 +187,25 @@ class Program
         rootCommand.AddOption(databaseOption);
         rootCommand.AddOption(queryOption);
         rootCommand.AddOption(concatOption);
+        rootCommand.AddOption(verbosityOption);
 
         /*----------------------Handlers Setup-----------------------------*/
         
         rootCommand.SetHandler(CliOptionsHandlers.UniversalHandler,
             inputOption, outputOption, databaseOption, queryOption,
-            concatOption);
+            concatOption, verbosityOption);
         
         /*----------------------------------------------------------------*/
 
-        return rootCommand.Invoke(args);
+        try
+        {
+            return await rootCommand.InvokeAsync(args);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+
+        return 0;
     }
 }

@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using netxml2kml.Models;
+using Serilog;
 
 namespace netxml2kml.Methods;
 
@@ -7,6 +8,8 @@ public static class Helpers
 {
     public static WirelessNetwork[] DeserializeXml(FileInfo inputFile)
     {
+        Log.Debug("Deserializing xml...");
+        
         var srcTree = XDocument.Load(inputFile.OpenRead());
         var srcNets = srcTree.Root!.Elements("wireless-network")
             .Where(wn => wn.Attribute("type")!.Value != "probe").ToList();
@@ -60,6 +63,8 @@ public static class Helpers
             wirelessNetworks[i].WirelessConnections = wirelessConnections;
         }
 
+        Log.Debug("Xml deserialized.");
+        
         return wirelessNetworks.ToArray();
     }
 
@@ -81,6 +86,8 @@ public static class Helpers
             {"Dec", 12},
         };
 
+        Log.Debug("Converting string {dateString} to date...", dateString);
+        
         var year = Int32.Parse(dateString.Split(" ")[4]);
         var month = monthNameNumber[dateString.Split(" ")[1]];
         var day = Int32.Parse(dateString.Split(" ")[2]);
@@ -88,13 +95,19 @@ public static class Helpers
         var minute = Int32.Parse(dateString.Split(" ")[3].Split(":")[1]);
         var second = Int32.Parse(dateString.Split(" ")[3].Split(":")[2]);
 
+        Log.Debug("String converted successfully.");
+
         return new DateTime(year, month, day, hour, minute, second);
     }
 
     public static void WriteStringToFile(string str, FileInfo file)
     {
+        Log.Debug("Saving kml to file...");
+        
         var writer = new StreamWriter(file.Open(FileMode.Create));
         writer.Write(str);
         writer.Close();
+        
+        Log.Debug("Kml saved to {file}.", file);
     }
 }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using netxml2kml.Methods;
 using netxml2kml.Models;
 
 namespace netxml2kml.Data;
@@ -13,8 +14,7 @@ public sealed class DatabaseContext : DbContext
 
     public DatabaseContext(string dbName = "netxml2kml.sqlite3.db")
     {
-        var folder = Environment.SpecialFolder.LocalApplicationData;
-        var path = Path.Join(Environment.GetFolderPath(folder), "netxml2kml");
+        var path = Path.Join(RuntimeStorage.AppFolder, "netxml2kml");
 
         if (!Directory.Exists(path))
         {
