@@ -87,7 +87,11 @@ public static class CliOptionsHandlers
             }
             else
             {
-                Log.Warning("Options combination is unsupported.");
+                Log.Warning("Options combination is unsupported: " +
+                            "-i: {input}; -o {output}; -d {useDatabase}; " +
+                            "-q: {sqlQuery}; -c: {concatFiles}; -v: {verbosityLevel}.",
+                    inputFile!, outputFile!, useDatabase, 
+                    sqlQuery!, concatFiles!, isVerbose);
             }
         }
         catch (Exception e)

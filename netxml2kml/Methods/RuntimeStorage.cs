@@ -17,7 +17,7 @@ public static class RuntimeStorage
     {
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
-            .WriteTo.Console(IsVerbose ? LogEventLevel.Verbose : LogEventLevel.Fatal,
+            .WriteTo.Console(IsVerbose ? LogEventLevel.Verbose : LogEventLevel.Warning,
                 outputTemplate: "{Message:lj}{NewLine}{Exception}")
             .WriteTo.File(Path.Join(LogsFolder, "log.txt"),
                 restrictedToMinimumLevel: IsVerbose ? LogEventLevel.Verbose : LogEventLevel.Warning,
