@@ -216,7 +216,8 @@ class Program
                         .GetLayout()
                         .Skip(HelpBuilder.Default.GetLayout().Count())
                         .Append(_ => Console.WriteLine(
-                            "netxml2kml – .netxml to .kml CLI converter & tools" +
+                            "Descritpion:" +
+                          "\n  netxml2kml – .netxml to .kml CLI converter & tools" +
                           "\n" +
                           "\nUsage:" +
                           "\n  netxml2kml [options]" +
@@ -226,10 +227,12 @@ class Program
                           "\n  -o, --output <file_path[.kml]>                      Path to the file to be created" +
                           "\n  -c, --concat <file_path[.kml] file_path[.kml] ...>  Concatenate multiple kml files" +
                           "\n  -d, --use-database                                  Use database (save/retrieve data)" +
-                          "\n  -q, --query <\"sql_query\">                           Filter input/output using sql query" +
+                          "\n  -q, --query <'sql_query'>                           Filter input/output using sql query" +
                           "\n  -v, --verbose                                       Show verbose output" +
                           "\n  -h, --help                                          Show help and usage information" +
-                          "\n  --version                                           Show version information")));
+                          "\n  --version                                           Show version information" +
+                          "\n" +
+                          "\nReference https://github.com/cuqmbr/netxml2kml for more information")));
             }).Build();
          
         try
