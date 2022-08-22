@@ -14,14 +14,12 @@ public sealed class DatabaseContext : DbContext
 
     public DatabaseContext(string dbName = "netxml2kml.sqlite3.db")
     {
-        var path = Path.Join(RuntimeStorage.AppFolder, "netxml2kml");
-
-        if (!Directory.Exists(path))
+        if (!Directory.Exists(RuntimeStorage.AppFolder))
         {
-            Directory.CreateDirectory(path);
+            Directory.CreateDirectory(RuntimeStorage.AppFolder);
         }
         
-        DbPath = Path.Join(path, dbName);
+        DbPath = Path.Join(RuntimeStorage.AppFolder, dbName);
         Database.EnsureCreated();
     }
     
