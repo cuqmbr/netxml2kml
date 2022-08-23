@@ -182,13 +182,6 @@ class Program
             Arity = ArgumentArity.ZeroOrOne
         };
         
-        verboseOption.AddValidator(result =>
-        {
-            RuntimeStorage.IsVerbose = result.GetValueForOption(verboseOption);
-        });
-
-        RuntimeStorage.ConfigureLogger();
-        
         /*----------------------Root Command Setup-------------------------*/
 
         var rootCommand =

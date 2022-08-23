@@ -86,16 +86,12 @@ public static class Helpers
             {"Dec", 12},
         };
 
-        Log.Debug("Converting string {dateString} to date...", dateString);
-        
         var year = Int32.Parse(dateString.Split(" ")[4]);
         var month = monthNameNumber[dateString.Split(" ")[1]];
         var day = Int32.Parse(dateString.Split(" ")[2]);
         var hour = Int32.Parse(dateString.Split(" ")[3].Split(":")[0]);
         var minute = Int32.Parse(dateString.Split(" ")[3].Split(":")[1]);
         var second = Int32.Parse(dateString.Split(" ")[3].Split(":")[2]);
-
-        Log.Debug("String converted successfully.");
 
         return new DateTime(year, month, day, hour, minute, second);
     }

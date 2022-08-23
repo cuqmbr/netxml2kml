@@ -15,12 +15,15 @@ public static class RuntimeStorage
 
     public static void ConfigureLogger()
     {
+        var logLevel =
+            IsVerbose ? LogEventLevel.Verbose : LogEventLevel.Warning;
+        
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
-            .WriteTo.Console(IsVerbose ? LogEventLevel.Verbose : LogEventLevel.Warning,
+            .WriteTo.Console(logLevel,
                 outputTemplate: "{Message:lj}{NewLine}{Exception}")
             .WriteTo.File(Path.Join(LogsFolder, "log.txt"),
-                restrictedToMinimumLevel: IsVerbose ? LogEventLevel.Verbose : LogEventLevel.Warning,
+                restrictedToMinimumLevel: logLevel,
                 rollingInterval: RollingInterval.Day)
             .CreateLogger();
     }

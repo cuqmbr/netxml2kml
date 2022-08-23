@@ -12,6 +12,9 @@ public static class CliOptionsHandlers
         FileInfo? outputFile, bool useDatabase, string? sqlQuery,
         IEnumerable<FileInfo>? concatFiles, bool isVerbose)
     {
+        RuntimeStorage.IsVerbose = isVerbose;
+        RuntimeStorage.ConfigureLogger();
+        
         Log.Information("Handler started with options: " +
                         "-i: {input}; -o {output}; -d {useDatabase}; " +
                         "-q: {sqlQuery}; -c: {concatFiles}; -v: {verbosityLevel}.",
