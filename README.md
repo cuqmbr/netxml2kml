@@ -29,12 +29,21 @@ Reference [this](https://docs.microsoft.com/en-us/dotnet/core/deploying/) page t
 
 NOTE: 
 
-- RID – [runtime identifier](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog) of a targeted platform
 - ~ – project root directory
+- RID – [runtime identifier](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog) of a targeted platform
 
 <!--## How to tweak this project for your own uses?
 
 -->
+
+## Cammand examples
+
+- Convert .netxml to .kml: `$ netxml2kml -i *path_to_netxml_file* -o *path_to_output_file*`
+- Add wireless networks with related wireless connections (clients) to database: `$ netxml2kml -di *path_to_netxml_file*`
+  - Additionally you can filter input data: `$ netxml2kml -di *path_to_netxml_file* -q *sql_query*`
+- Retrieve wireless networks with related wireless connections (clients) from database: `$ netxml2kml -do *path_to_output_file*`
+  - You can filter output data similarly to filtering input data: `$ netxml2kml -do *path_to_output_file* -q *sql_query*`
+- Concatenate multiple .kml files: `$ netxml2kml -c *pathes_to_kml_files_separated_by_spaces* -o *path_to_output_file*`
 
 ## SQL querying reference
 
@@ -44,8 +53,7 @@ This section will help you to understand database structure the program uses ang
 
 Select wireless networks where:
 
-- column name matching some pattern:
-`SELECT * FROM WirelessNetworks WHERE *column name* LIKE '%*pattern*%'`
+- column name matching some pattern: `SELECT * FROM WirelessNetworks WHERE *column name* LIKE '%*pattern*%'`
 
 - clients with a specific manufacturer has been spotted:
 ```
@@ -76,6 +84,14 @@ Reference [this](https://www.sqlitetutorial.net/) tutorial to learn more about v
 | LastUpdateDate TEXT  |                                                                                         
 \----------------------/                                                                                         
 </pre>
+
+## Data storage folder
+
+Acording to [this](https://jimrich.sk/environment-specialfolder-on-windows-linux-and-os-x/) website program data (database and logs) are stored in netxml2kml folder at:
+
+- Linux: /home/$USER/.local/share
+- OSX: /Users/$USER/.local/share
+- Windows: C:\Users\%USERNAME%\AppData\Local
 
 ## How to contribute?
 
