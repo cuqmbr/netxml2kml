@@ -68,21 +68,21 @@ Reference [this](https://www.sqlitetutorial.net/) tutorial to learn more about v
 ### Database schema
 
 <pre>
-/----------------------\                                                                                         
-|   WirelessNetworks   |                                                                                         
-|----------------------|                                                                                         
-|    PK Bssid TEXT     |1-----\      /--------------------------------------\             /---------------------\
-|      Essid TEXT      |      |      |          WirelessConnection          |             |   WirelessClients   |
-|  Manufacturer TEXT   |      |      |--------------------------------------|             |---------------------|
-|   Encryption TEXT    |      \-----∞|      /- FK WirelessNetworkBssid TEXT |      /-----1|     PK Mac TEXT     |
-|  FrequencyMhz REAL   |             | PK -|                                |      |      |  Manufacturer TEXT  |
-| MaxSignalDbm INTEGER |             |      \- FK WirelessClientMac TEXT    |∞-----/      |  FirstSeenDate TEXT |
-|   MaxLatitude REAL   |             |          FirstSeenDate TEXT          |             | LastUpdateDate TEXT |
-|  MaxLongitude REAL   |             |         LastUpdateDate TEXT          |             \---------------------/
-|   MaxAltitude REAL   |             \--------------------------------------/                                    
-|  FirstSeenDate TEXT  |                                                                                         
-| LastUpdateDate TEXT  |                                                                                         
-\----------------------/                                                                                         
+/----------------------\                                                                         
+|   WirelessNetworks   |                                                                         
+|----------------------|                                                                         
+|    PK Bssid TEXT     |1-\  /--------------------------------------\     /---------------------\
+|      Essid TEXT      |  |  |          WirelessConnection          |     |   WirelessClients   |
+|  Manufacturer TEXT   |  |  |--------------------------------------|     |---------------------|
+|   Encryption TEXT    |  \-∞|      /- FK WirelessNetworkBssid TEXT |  /-1|     PK Mac TEXT     |
+|  FrequencyMhz REAL   |     | PK -|                                |  |  |  Manufacturer TEXT  |
+| MaxSignalDbm INTEGER |     |      \- FK WirelessClientMac TEXT    |∞-/  |  FirstSeenDate TEXT |
+|   MaxLatitude REAL   |     |          FirstSeenDate TEXT          |     | LastUpdateDate TEXT |
+|  MaxLongitude REAL   |     |         LastUpdateDate TEXT          |     \---------------------/
+|   MaxAltitude REAL   |     \--------------------------------------/                            
+|  FirstSeenDate TEXT  |                                                                         
+| LastUpdateDate TEXT  |                                                                         
+\----------------------/                                                                         
 </pre>
 
 ## Data storage folder
