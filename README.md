@@ -77,8 +77,8 @@ Reference [this](https://www.sqlitetutorial.net/) tutorial to learn more about v
 |   Encryption TEXT    |  \-∞|      /- FK WirelessNetworkBssid TEXT |  /-1|     PK Mac TEXT     |
 |  FrequencyMhz REAL   |     | PK -|                                |  |  |  Manufacturer TEXT  |
 | MaxSignalDbm INTEGER |     |      \- FK WirelessClientMac TEXT    |∞-/  |  FirstSeenDate TEXT |
-|   MaxLatitude REAL   |     |          FirstSeenDate TEXT          |     | LastUpdateDate TEXT |
-|  MaxLongitude REAL   |     |         LastUpdateDate TEXT          |     \---------------------/
+|   MaxLatitude REAL   |     |            FirstSeenDate TEXT        |     | LastUpdateDate TEXT |
+|  MaxLongitude REAL   |     |           LastUpdateDate TEXT        |     \---------------------/
 |   MaxAltitude REAL   |     \--------------------------------------/                            
 |  FirstSeenDate TEXT  |                                                                         
 | LastUpdateDate TEXT  |                                                                         
