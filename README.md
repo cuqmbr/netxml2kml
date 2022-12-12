@@ -21,7 +21,7 @@ Download the latest executable suitable for your system at [Releases](https://gi
 
 ### Compile yourself
 
-1. [Download](https://dotnet.microsoft.com/download) and install .NET Runtime or SDK >= 6.0
+1. [Download](https://dotnet.microsoft.com/download) and install .NET SDK >= 6.0
 2. Clone this git repository: `$ git clone https://github.com/cuqmbr/netxml2kml.git`
 3. Compile (deploy) the app: `[~/netxml2kml]$ dotnet publish -c Release -r <RID> --self-contained true`
 
