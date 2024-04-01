@@ -7,11 +7,13 @@
 - Concatenate multiple .kml files
 - Filter input/output data using sql queries
 
+<!--
 ## Project preview
 
 <div style="display: flex;">
   <img src="http://drive.google.com/uc?export=view&id=1LsLWYtvKkqxeFwEhixMzFx8mZ6FT-iI6" alt="" width="618" height="300"  border="10" />
 </div>                                                                                                                       
+-->
 
 ## How to install?
 
